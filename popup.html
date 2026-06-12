@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Naver cafe word blocker</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="popup">
+      <form id="blockForm" class="add-row" autocomplete="off">
+        <input id="wordInput" type="text" placeholder="차단 단어" aria-label="차단 단어">
+        <button type="submit">추가</button>
+      </form>
+      <ul id="wordList" class="word-list" aria-label="차단 단어 목록"></ul>
+      <p id="emptyMessage" class="empty">추가된 차단 단어가 없습니다.</p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>
