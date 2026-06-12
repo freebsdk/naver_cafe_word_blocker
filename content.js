@@ -1,5 +1,5 @@
 const STORAGE_KEY = "blockedWords";
-const HIDDEN_ATTR = "data-bds-cafe-blocked";
+const HIDDEN_ATTR = "data-naver-cafe-blocked";
 
 let blockedWords = [];
 let scanTimer = 0;
