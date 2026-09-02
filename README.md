@@ -1,24 +1,25 @@
-# Naver cafe blocker
+# Naver Cafe Blocker
 
-Naver Cafe posts are hidden from the list page when either condition matches:
+네이버 카페 게시글 목록에서 다음 조건에 해당하는 글을 숨기는 Chrome 확장 프로그램입니다.
 
-- The post title contains a saved blocked word.
-- The writer nickname exactly matches a saved blocked author.
+- 제목에 등록된 차단 단어가 포함된 글
+- 작성자 닉네임이 등록된 차단 작성자와 정확히 일치하는 글
 
-Member-level badges next to nicknames are ignored when matching authors.
+작성자 차단 시 닉네임 옆의 회원 등급 배지는 무시됩니다.
 
-## Install
+## 설치 방법
 
-1. Open `chrome://extensions`.
-2. Enable developer mode.
-3. Click "Load unpacked".
-4. Select `D:\dev4\bdscafe_ext`.
+1. Chrome에서 `chrome://extensions`를 엽니다.
+2. 우측 상단의 개발자 모드를 활성화합니다.
+3. `압축 해제된 확장 프로그램을 로드합니다`를 클릭합니다.
+4. 이 프로젝트 디렉터리(`naver_cafe_word_blocker`)를 선택합니다.
+5. 필요하면 확장 프로그램 메뉴에서 확장을 고정합니다.
 
-## Use
+## 사용 방법
 
-Open the extension popup and choose a tab:
+확장 프로그램 아이콘을 클릭하고 차단할 항목에 맞는 탭을 선택합니다.
 
-- `단어차단`: add a word or phrase contained in a post title.
-- `작성자`: add the exact writer nickname to block.
+- `단어차단`: 게시글 제목에 포함될 단어나 문구를 추가합니다.
+- `작성자`: 차단할 작성자의 정확한 닉네임을 추가합니다.
 
-Changes are applied to open Naver Cafe list pages immediately.
+변경 사항은 열려 있는 네이버 카페 게시글 목록에 즉시 적용됩니다.
