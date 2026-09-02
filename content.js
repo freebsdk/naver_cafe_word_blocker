@@ -1,21 +1,35 @@
-const STORAGE_KEY = "blockedWords";
+const WORD_STORAGE_KEY = "blockedWords";
+const AUTHOR_STORAGE_KEY = "blockedAuthors";
 const HIDDEN_ATTR = "data-naver-cafe-blocked";
 
 let blockedWords = [];
+let blockedAuthors = [];
 let scanTimer = 0;
 
 init();
 
 async function init() {
-  blockedWords = await loadWords();
+  const blockedEntries = await loadBlockedEntries();
+  blockedWords = blockedEntries.words;
+  blockedAuthors = blockedEntries.authors;
   scanSoon();
 
   chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName !== "sync" || !changes[STORAGE_KEY]) {
+    if (
+      areaName !== "sync" ||
+      (!changes[WORD_STORAGE_KEY] && !changes[AUTHOR_STORAGE_KEY])
+    ) {
       return;
     }
 
-    blockedWords = normalizeWords(changes[STORAGE_KEY].newValue);
+    if (changes[WORD_STORAGE_KEY]) {
+      blockedWords = normalizeEntries(changes[WORD_STORAGE_KEY].newValue);
+    }
+
+    if (changes[AUTHOR_STORAGE_KEY]) {
+      blockedAuthors = normalizeEntries(changes[AUTHOR_STORAGE_KEY].newValue);
+    }
+
     revealPreviouslyHidden();
     scanSoon();
   });
@@ -27,21 +41,28 @@ async function init() {
   });
 }
 
-async function loadWords() {
-  const result = await chrome.storage.sync.get({ [STORAGE_KEY]: [] });
-  return normalizeWords(result[STORAGE_KEY]);
+async function loadBlockedEntries() {
+  const result = await chrome.storage.sync.get({
+    [WORD_STORAGE_KEY]: [],
+    [AUTHOR_STORAGE_KEY]: []
+  });
+
+  return {
+    words: normalizeEntries(result[WORD_STORAGE_KEY]),
+    authors: normalizeEntries(result[AUTHOR_STORAGE_KEY])
+  };
 }
 
-function normalizeWords(words) {
-  if (!Array.isArray(words)) {
+function normalizeEntries(entries) {
+  if (!Array.isArray(entries)) {
     return [];
   }
 
   const seen = new Set();
   const normalized = [];
 
-  for (const word of words) {
-    const value = String(word).trim();
+  for (const entry of entries) {
+    const value = String(entry).trim();
     const key = value.toLocaleLowerCase("ko-KR");
 
     if (!value || seen.has(key)) {
@@ -61,21 +82,34 @@ function scanSoon() {
 }
 
 function hideMatchingPosts() {
-  if (blockedWords.length === 0) {
+  if (blockedWords.length === 0 && blockedAuthors.length === 0) {
     revealPreviouslyHidden();
     return;
   }
 
   const links = [...document.querySelectorAll("a")].filter(isPostLinkCandidate);
+  const processedContainers = new Set();
 
   for (const link of links) {
     const container = findPostContainer(link);
-    if (!container || container.getAttribute(HIDDEN_ATTR) === "true") {
+    if (
+      !container ||
+      processedContainers.has(container) ||
+      container.getAttribute(HIDDEN_ATTR) === "true"
+    ) {
       continue;
     }
 
-    const text = getComparableText(container);
-    if (blockedWords.some((word) => text.includes(word))) {
+    processedContainers.add(container);
+
+    const title = getComparableText(link);
+    const author = getAuthorName(container);
+    const isBlockedByWord = blockedWords.some((word) => title.includes(word));
+    const isBlockedByAuthor = blockedAuthors.some(
+      (blockedAuthor) => author === blockedAuthor
+    );
+
+    if (isBlockedByWord || isBlockedByAuthor) {
       container.setAttribute(HIDDEN_ATTR, "true");
       container.style.setProperty("display", "none", "important");
     }
@@ -86,14 +120,17 @@ function isPostLinkCandidate(link) {
   const text = link.innerText.trim();
   const href = link.href || "";
 
-  if (text.length < 2) {
+  if (
+    text.length < 2 ||
+    link.matches(".cmt, [class*='comment'], [class*='Comment']") ||
+    href.includes("commentFocus=true")
+  ) {
     return false;
   }
 
   return (
     href.includes("/articles/") ||
-    href.includes("articleid=") ||
-    link.closest("li, tr, [role='listitem']") !== null
+    href.includes("articleid=")
   );
 }
 
@@ -139,6 +176,19 @@ function isReasonablePostContainer(element) {
 
 function getComparableText(element) {
   return (element.innerText || "").replace(/\s+/g, " ").trim().toLocaleLowerCase("ko-KR");
+}
+
+function getAuthorName(container) {
+  const nickname = container.querySelector([
+    ".ArticleBoardWriterInfo .nickname",
+    ".nick_btn .nickname",
+    "[class*='WriterInfo'] .nickname",
+    "[class*='writer_info'] .nickname"
+  ].join(","));
+
+  // Read only the nickname element. The sibling level icon and its
+  // screen-reader text (for example, "멤버등급 : VIP회원") are excluded.
+  return nickname ? getComparableText(nickname) : "";
 }
 
 function revealPreviouslyHidden() {

@@ -1,29 +1,41 @@
-const STORAGE_KEY = "blockedWords";
+const sections = [
+  {
+    storageKey: "blockedWords",
+    form: document.querySelector("#wordForm"),
+    input: document.querySelector("#wordInput"),
+    list: document.querySelector("#wordList"),
+    emptyMessage: document.querySelector("#wordEmptyMessage")
+  },
+  {
+    storageKey: "blockedAuthors",
+    form: document.querySelector("#authorForm"),
+    input: document.querySelector("#authorInput"),
+    list: document.querySelector("#authorList"),
+    emptyMessage: document.querySelector("#authorEmptyMessage")
+  }
+];
 
-const form = document.querySelector("#blockForm");
-const input = document.querySelector("#wordInput");
-const list = document.querySelector("#wordList");
-const emptyMessage = document.querySelector("#emptyMessage");
+const tabs = [...document.querySelectorAll("[role='tab']")];
 
-async function loadWords() {
-  const result = await chrome.storage.sync.get({ [STORAGE_KEY]: [] });
-  return normalizeWords(result[STORAGE_KEY]);
+async function loadValues(storageKey) {
+  const result = await chrome.storage.sync.get({ [storageKey]: [] });
+  return normalizeValues(result[storageKey]);
 }
 
-async function saveWords(words) {
-  await chrome.storage.sync.set({ [STORAGE_KEY]: normalizeWords(words) });
+async function saveValues(storageKey, values) {
+  await chrome.storage.sync.set({ [storageKey]: normalizeValues(values) });
 }
 
-function normalizeWords(words) {
-  if (!Array.isArray(words)) {
+function normalizeValues(values) {
+  if (!Array.isArray(values)) {
     return [];
   }
 
   const seen = new Set();
   const normalized = [];
 
-  for (const word of words) {
-    const value = String(word).trim();
+  for (const item of values) {
+    const value = String(item).trim();
     const key = value.toLocaleLowerCase("ko-KR");
 
     if (!value || seen.has(key)) {
@@ -37,57 +49,95 @@ function normalizeWords(words) {
   return normalized;
 }
 
-function render(words) {
-  list.replaceChildren();
-  emptyMessage.hidden = words.length > 0;
+function render(section, values) {
+  section.list.replaceChildren();
+  section.emptyMessage.hidden = values.length > 0;
 
-  for (const word of words) {
+  for (const value of values) {
     const item = document.createElement("li");
-    item.className = "word-item";
+    item.className = "block-item";
 
     const text = document.createElement("span");
-    text.className = "word-text";
-    text.textContent = word;
+    text.className = "block-text";
+    text.textContent = value;
 
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "remove-button";
     remove.textContent = "×";
-    remove.setAttribute("aria-label", `${word} 삭제`);
+    remove.setAttribute("aria-label", `${value} 삭제`);
     remove.addEventListener("click", async () => {
-      const current = await loadWords();
-      const next = current.filter((itemWord) => itemWord !== word);
-      await saveWords(next);
-      render(next);
+      const current = await loadValues(section.storageKey);
+      const targetKey = value.toLocaleLowerCase("ko-KR");
+      const next = current.filter(
+        (itemValue) => itemValue.toLocaleLowerCase("ko-KR") !== targetKey
+      );
+      await saveValues(section.storageKey, next);
+      render(section, next);
     });
 
     item.append(text, remove);
-    list.append(item);
+    section.list.append(item);
   }
 }
 
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  const word = input.value.trim();
-  if (!word) {
-    return;
+function activateTab(nextTab, focusTab = false) {
+  for (const tab of tabs) {
+    const isSelected = tab === nextTab;
+    tab.setAttribute("aria-selected", String(isSelected));
+    tab.tabIndex = isSelected ? 0 : -1;
+    document.querySelector(`#${tab.dataset.panel}`).hidden = !isSelected;
   }
 
-  const current = await loadWords();
-  const exists = current.some(
-    (item) => item.toLocaleLowerCase("ko-KR") === word.toLocaleLowerCase("ko-KR")
-  );
-
-  if (exists) {
-    return;
+  if (focusTab) {
+    nextTab.focus();
   }
+}
 
-  const next = [...current, word];
-  await saveWords(next);
-  input.value = "";
-  input.focus();
-  render(next);
-});
+for (const [index, tab] of tabs.entries()) {
+  tab.addEventListener("click", () => activateTab(tab));
+  tab.addEventListener("keydown", (event) => {
+    if (!["ArrowLeft", "ArrowRight"].includes(event.key)) {
+      return;
+    }
 
-loadWords().then(render);
+    event.preventDefault();
+    const direction = event.key === "ArrowRight" ? 1 : -1;
+    const nextIndex = (index + direction + tabs.length) % tabs.length;
+    activateTab(tabs[nextIndex], true);
+  });
+}
+
+for (const section of sections) {
+  section.form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const value = section.input.value.trim();
+    if (!value) {
+      return;
+    }
+
+    const current = await loadValues(section.storageKey);
+    const valueKey = value.toLocaleLowerCase("ko-KR");
+    const exists = current.some(
+      (item) => item.toLocaleLowerCase("ko-KR") === valueKey
+    );
+
+    if (exists) {
+      section.input.select();
+      return;
+    }
+
+    const next = [...current, value];
+    await saveValues(section.storageKey, next);
+    section.input.value = "";
+    section.input.focus();
+    render(section, next);
+  });
+}
+
+Promise.all(
+  sections.map(async (section) => {
+    render(section, await loadValues(section.storageKey));
+  })
+);

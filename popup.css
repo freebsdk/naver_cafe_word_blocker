@@ -4,7 +4,7 @@
 
 body {
   margin: 0;
-  min-width: 320px;
+  min-width: 340px;
   color: #1f2937;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: #f7f8fa;
@@ -12,6 +12,42 @@ body {
 
 .popup {
   padding: 12px;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin: -2px -2px 12px;
+  padding: 2px;
+  border-radius: 8px;
+  background: #e8edf4;
+}
+
+.tab-button {
+  height: 34px;
+  border-radius: 6px;
+  color: #526071;
+  background: transparent;
+}
+
+.tab-button:hover {
+  color: #1f2937;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.tab-button[aria-selected="true"] {
+  color: #1d4ed8;
+  background: white;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+.tab-button:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.45);
+  outline-offset: 1px;
+}
+
+.tab-panel[hidden] {
+  display: none;
 }
 
 .add-row {
@@ -49,7 +85,7 @@ button:hover {
   background: #1d4ed8;
 }
 
-.word-list {
+.block-list {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -58,7 +94,7 @@ button:hover {
   list-style: none;
 }
 
-.word-item {
+.block-item {
   display: grid;
   grid-template-columns: 1fr 28px;
   align-items: center;
@@ -70,7 +106,7 @@ button:hover {
   background: white;
 }
 
-.word-text {
+.block-text {
   overflow-wrap: anywhere;
   font-size: 13px;
 }

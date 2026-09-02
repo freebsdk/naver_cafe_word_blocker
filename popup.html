@@ -3,17 +3,50 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Naver cafe word blocker</title>
+    <title>Naver cafe blocker</title>
     <link rel="stylesheet" href="popup.css">
   </head>
   <body>
     <main class="popup">
-      <form id="blockForm" class="add-row" autocomplete="off">
-        <input id="wordInput" type="text" placeholder="차단 단어" aria-label="차단 단어">
-        <button type="submit">추가</button>
-      </form>
-      <ul id="wordList" class="word-list" aria-label="차단 단어 목록"></ul>
-      <p id="emptyMessage" class="empty">추가된 차단 단어가 없습니다.</p>
+      <div class="tabs" role="tablist" aria-label="차단 유형">
+        <button
+          id="wordTab"
+          class="tab-button"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="wordPanel"
+          data-panel="wordPanel"
+        >단어차단</button>
+        <button
+          id="authorTab"
+          class="tab-button"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="authorPanel"
+          data-panel="authorPanel"
+          tabindex="-1"
+        >작성자</button>
+      </div>
+
+      <section id="wordPanel" class="tab-panel" role="tabpanel" aria-labelledby="wordTab">
+        <form id="wordForm" class="add-row" autocomplete="off">
+          <input id="wordInput" type="text" placeholder="제목 차단 단어" aria-label="제목 차단 단어">
+          <button type="submit">추가</button>
+        </form>
+        <ul id="wordList" class="block-list" aria-label="차단 단어 목록"></ul>
+        <p id="wordEmptyMessage" class="empty">추가된 차단 단어가 없습니다.</p>
+      </section>
+
+      <section id="authorPanel" class="tab-panel" role="tabpanel" aria-labelledby="authorTab" hidden>
+        <form id="authorForm" class="add-row" autocomplete="off">
+          <input id="authorInput" type="text" placeholder="작성자 닉네임" aria-label="차단 작성자 닉네임">
+          <button type="submit">추가</button>
+        </form>
+        <ul id="authorList" class="block-list" aria-label="차단 작성자 목록"></ul>
+        <p id="authorEmptyMessage" class="empty">추가된 차단 작성자가 없습니다.</p>
+      </section>
     </main>
     <script src="popup.js"></script>
   </body>

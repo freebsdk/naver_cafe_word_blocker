@@ -1,12 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "Naver cafe word blocker",
-  "version": "0.1.0",
-  "description": "Hide Naver Cafe posts that contain blocked words.",
+  "name": "Naver cafe blocker",
+  "version": "0.2.0",
+  "description": "Hide Naver Cafe posts by blocked title words or authors.",
   "permissions": ["storage"],
   "host_permissions": ["https://cafe.naver.com/*"],
   "action": {
-    "default_title": "Naver cafe word blocker",
+    "default_title": "Naver cafe blocker",
     "default_popup": "popup.html"
   },
   "content_scripts": [
